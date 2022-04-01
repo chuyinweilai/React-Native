@@ -1,47 +1,63 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Image,
   Text,
   Pressable,
   FlatList,
-  ScrollView
+  ScrollView,
+  TouchableOpacity
 } from 'react-native';
 
 // 防止与原生标签混淆，重命名为ELText
-import { Text as ElText } from '@react-native-elements/base';
+import {
+  SearchBar,
+  Text as ElText
+} from '@react-native-elements/base';
+
+// 引入接口
+import {
+  GETBANNER,
+  GETMERCHANDISELIST
+} from '@api/main';
 
 // 引入图标
 import AntDesign from 'react-native-vector-icons/AntDesign';
 
 // 引入样式文件
-import styles from './mainStyles';
+import styles from './styles';
 
+const SearchElement = () => {
+  const [search, setSearch] = useState('');
+
+  const updateSearch = (val) => {
+    setSearch(val);
+  };
+
+  return (
+    <SearchBar
+      platform="ios"
+      cancelButtonTitle="取消"
+      lightTheme={true}
+      placeholder="2022 愿世界开始变好"
+      onChangeText={updateSearch}
+      value={search}
+      />
+  );
+};
 
 // 轮播图
 const BannerElement = () => {
-  const bannerList = [
-    {
-      id: 0,
-      title: 'Main dishes',
-      url: 'https://somoskudasai.com/wp-content/uploads/2020/09/51qswBACKwL._AC_.jpg'
-    },
-    {
-      id: 1,
-      title: 'Sides',
-      url: 'https://somoskudasai.com/wp-content/uploads/2020/09/51Xq5s6HtqL._AC_.jpg'
-    },
-    {
-      id: 2,
-      title: 'Drinks',
-      url: 'https://somoskudasai.com/wp-content/uploads/2020/09/51qs5T3fnfL._AC_.jpg'
-    },
-    {
-      id: 3,
-      title: 'Desserts',
-      url: 'https://somoskudasai.com/wp-content/uploads/2020/09/71jOt9zpiKL._AC_SL1000_.jpg'
-    }
-  ];
+  const [list, setList] = useState([]);
+
+  useEffect(() => {
+    GETBANNER()
+    .then(res => {
+      if (res.errno === 0){ setList(res.data); }
+      else { setList([]); }
+    });
+  },[]);
+
   return (
     <View style={styles.bannerBox}>
       <ScrollView
@@ -50,12 +66,12 @@ const BannerElement = () => {
         showsHorizontalScrollIndicator={true}
         >
         {
-          bannerList.map(val=>
+          list.map(val=>
             <Image
               key={val.id}
               resizeMode={'cover'}
               style={styles.bannerImg}
-              source={{uri: val.url}}
+              source={{uri: val.imageUrl}}
               />
           )
         }
@@ -110,8 +126,7 @@ const CatalogElement = () => {
                 ? 0.7
                 : 1
               },
-              styles.catalog]}
-            >
+              styles.catalog]}>
             <AntDesign name={val.icon} color={'#333'} size={26} />
             <Text style={{marginTop: 10}}>{val.name}</Text>
           </Pressable>
@@ -181,52 +196,30 @@ const ZoneElement = () => {
 };
 
 // 商品列表
-const GoodsElement = () => {
-  const goodList = [
-    {
-      id: 0,
-      title: 'Main dishes',
-      price: 100,
-      url: 'https://somoskudasai.com/wp-content/uploads/2020/09/51qswBACKwL._AC_.jpg'
-    },
-    {
-      id: 1,
-      title: 'Sides',
-      price: 60,
-      url: 'https://somoskudasai.com/wp-content/uploads/2020/09/51Xq5s6HtqL._AC_.jpg'
-    },
-    {
-      id: 2,
-      title: 'Drinks',
-      price: 1200,
-      url: 'https://somoskudasai.com/wp-content/uploads/2020/09/51qs5T3fnfL._AC_.jpg'
-    },
-    {
-      id: 3,
-      title: 'Desserts',
-      price: 39,
-      url: 'https://somoskudasai.com/wp-content/uploads/2020/09/71jOt9zpiKL._AC_SL1000_.jpg'
-    },
-    {
-      id: 4,
-      title: 'Desserts',
-      price: 831,
-      url: 'https://somoskudasai.com/wp-content/uploads/2020/09/71jOt9zpiKL._AC_SL1000_.jpg'
-    },
-    {
-      id: 5,
-      title: 'Desserts',
-      price: 1093,
-      url: 'https://somoskudasai.com/wp-content/uploads/2020/09/71jOt9zpiKL._AC_SL1000_.jpg'
-    }
-  ];
+const GoodsElement = ({navigation}) => {
+  const [body,setBody] = useState({ pageSize:5, currentPage: 1});
+  const [list,setList] = useState([]);
+
+  useEffect(() => {
+    GETMERCHANDISELIST(body)
+    .then(res => {
+      if (res.errno === 0){
+        setList(res.data.records || []);
+      } else {
+        // setData({});
+        setList([]);
+      }
+    });
+  },[body]);
 
   const goodsItem = ({ index, item }) => {
     return (
-      <View style={{
-        ...styles.goodsBox,
-        paddingLeft: (index % 2) ? 8 : 16,
-        paddingRight: (index % 2) ? 16 : 8
+      <TouchableOpacity
+        onPress={() => navigation.navigate('FurnDetail')}
+        style={{
+          ...styles.goodsBox,
+          paddingLeft: (index % 2) ? 8 : 16,
+          paddingRight: (index % 2) ? 16 : 8
         }}>
         <View
           key={item.id}
@@ -235,20 +228,25 @@ const GoodsElement = () => {
             key={item.id}
             resizeMode={'cover'}
             style={styles.goodsImg}
-            source={{uri: item.url}}
+            source={{uri: item.whiteGroundDesign}}
             />
           <Text style={styles.goodsPrice}>¥{item.price}</Text>
-          <Text>{item.title}</Text>
+          <Text
+            style={styles.goodsTitle}
+            numberOfLines={1}
+            ellipsizeMode="tail">
+            {item.name}
+          </Text>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
   return (
-    <View>
+    <View style={styles.goodsList}>
       <ElText h4 h4Style={{ ...styles.h4Title, textAlign: 'center' }}>畅销产品</ElText>
       <FlatList
-        data={goodList}
+        data={list}
         numColumns={2}
         horizontal={false}
         renderItem={goodsItem}
@@ -259,12 +257,15 @@ const GoodsElement = () => {
 };
 
 // 主组件
-const Main = () => {
-
+const Main = (props) => {
   const DATA = [
     {
+      title: 'SearchElement',
+      component: <SearchElement />
+    },
+    {
       title: 'banner',
-      component: <BannerElement/>
+      component: <BannerElement {...props}/>
     },
     {
       title: 'catalog',
@@ -275,10 +276,11 @@ const Main = () => {
       component: <ZoneElement/>
     },
     {
-      title: 'zone',
-      component: <GoodsElement/>
+      title: 'goods',
+      component: <GoodsElement {...props}/>
     }
   ];
+
 
   return (
     <View style={styles.container}>

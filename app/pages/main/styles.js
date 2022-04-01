@@ -1,4 +1,4 @@
-import { StatusBar, StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 
 // 获取窗口的宽高,且可以在尺寸变化时自动更新
 const { width } = Dimensions.get('window');
@@ -10,7 +10,7 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container:{
     flex: 1,
-    marginTop: StatusBar.currentHeight || 0,
+    // marginTop: StatusBar.currentHeight || 0,
     backgroundColor: '#FFF'
   },
   bannerBox: {
@@ -57,30 +57,36 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start'
   },
 
+  goodsList:{
+    backgroundColor: '#f5f5f5'
+  },
   goodsBox:{
     width: '50%',
-    marginBottom: 10,
+    marginBottom: 20,
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center'
   },
   goods:{
     width: '100%',
-    height: 260,
+    height: 280,
     overflow: 'hidden',
-    borderRadius: 8
+    borderRadius: 8,
+    backgroundColor: '#FFF'
   },
   goodsImg:{
     width: '100%',
     height: 210
   },
   goodsPrice:{
+    paddingHorizontal: 12,
     marginTop: 6,
     color: '#FF0000'
   },
   goodsTitle:{
-    marginTop: 6,
-    fontWeight: 600
+    paddingHorizontal: 12,
+    marginBottom: 20,
+    marginTop: 6
   }
 });
 
